@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+
+    <!-- Centered Toggle Buttons -->
+    <div class="d-flex justify-content-center mb-4">
+        <button class="btn btn-outline-primary mx-2" id="btnGSAudit">DB Update</button>
+    </div>
+
+    <!-- Upload Section (Hidden Initially) -->
+    <div id="uploadSection" class="card shadow p-4 mb-4 d-none">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <h5 id="uploadTitle" class="mb-3 text-center fw-bold">DU Update Upload</h5>
+            <!-- Module Name -->
+            <div class="row" style="padding: 0.3rem">
+                <div class="col-md-6" style="padding: 0.2rem">
+                    <label for="appname" class="form-label"> Module Name :</label>
+                    <select class="custom-select col-md-8" name="appname" id="appname" required>
+                        <option value="" selected hidden>Select DB Type...</option>
+                        {% for item in appname %}<option value="{{item}}">{{item}}</option>{% endfor %}
+                    </select>
+                </div>
+            </div>
+            <!-- Remark -->
+            <div class="row" style="padding: 0.3rem">
+                <div class="col-md-6" style="padding: 0.2rem">
+                    <label for="remark" class="form-label"> Remark :</label>
+                    <input type="text" class="custom-select col-md-8" id="remark" name="remark" placeholder="Remark.." required>
+                </div>
+
+            </div>
+            <div class="row" style="padding: 0.3rem">
+                <!-- File Upload -->
+                <div class="col-md-12" style="padding: 0.2rem">
+                    <label for="db_update_file" class="form-label">DB File : </label>
+                    <input type="file" class="clearable-file-input col-md-6" id="db_update_file" name="db_update_file"
+                           required accept=".xlsx" placeholder="Upload xlsx DB file...">
+                </div>
+            </div>
+            <!-- Buttons -->
+            <div class="d-flex justify-content-center gap-3">
+                <button type="submit" class="btn btn-danger">Load BackEnd Data</button>
+            </div>
+        </form>
+    </div>
+    <!-- Table Section -->
+    <div class="card shadow">
+        <div class="card-body">
+            <!-- Activity Table -->
+            <table class="table table-bordered table-hover text-center" id="myTable">
+                <thead class="table-primary">
+                    <tr>
+                        <th>SN</th>
+                        <th>Type</th>
+                        <th>User</th>
+                        <th>Remark</th>
+                        <th>Time</th>
+                        <th>Status</th>
+                        <th>Report</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for job in jobs %}
+                    <tr>
+                        <td>{{forloop.counter}}</td>
+                        <td>{{job.appname}}</td>
+                        <td>{{job.user.username}}</td>
+                        <td>{{job.remark}}</td>
+                        <td>{{job.create_dt|date:'m-d-Y H:i'}}</td>
+                        <td>{{job.status}}</td>
+                        <td>
+                            {% if job.status == 'Completed' %}
+                            <a href="/media/db_update/{{job.script}}"><i class="fa fa-download" style="color:green"></i>Log File </a>
+                            {% elif job.status == 'Running' or job.status == 'Queued' %}
+                            <div class="fa-2x">  <i class="fas fa-spinner fa-spin " style="font-size:24px;color:orange"></i></div>
+                            {% else %}
+                            <a href="/media/db_update/{{job.script}}"><i class="fa fa-download" style="color:red">Error </i></a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {%endfor%}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Script to Toggle Upload Section -->
+<script>
+document.getElementById("btnGSAudit").addEventListener("click", function () {
+    document.getElementById("uploadSection").classList.remove("d-none");
+    document.getElementById("uploadTitle").innerText = "DB Update";
+    document.getElementById("logLabel").innerText = "DCGKs Files";
+});
+</script>
+{% endblock %}

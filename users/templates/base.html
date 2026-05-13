@@ -1,0 +1,74 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Amentum G-Smart</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="{% static 'images/logo.ico' %}" rel="icon">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+</head>
+<body>
+<div class="d-flex" id="wrapper">
+    <!-- Sidebar -->
+    <div id="sidebar" class="bg-dark text-white p-3">
+        <h3 class="text-center mb-4">Amentum G-Smart</h3>
+        <ul class="list-unstyled">
+            <li><a href="{% url 'dashboard' %}" class="text-white text-decoration-none">Dashboard</a></li>
+            <li><a href="{% url 'audit' %}" class="text-white text-decoration-none">GS Audit</a></li>
+             <!-- Tab visible to both admin -->
+            {% if request.user.is_superuser %}
+                <li><a href="{% url 'user_list' %}" class="text-white text-decoration-none">User List</a></li>
+                <li><a href="{% url 'user_create' %}" class="text-white text-decoration-none">Add New User</a></li>
+                <li><a href="{% url 'smtp_config' %}" class="text-white text-decoration-none">SMTP Configuration</a></li>
+                <li><a href="{% url 'db_update' %}" class="text-white text-decoration-none">DB Update</a></li>
+                <li><a href="{% url 'audit_file' %}" class="text-white text-decoration-none">Audit File Upload</a></li>
+            {% endif %}
+            <!-- Tab visible to both admin end -->
+        </ul>
+    </div>
+    <!-- Page Content -->
+    <div id="page-content-wrapper" class="flex-grow-1">
+        <!-- Top Navbar -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom shadow-sm">
+            <div class="container-fluid">
+                <button class="btn btn-primary" id="menu-toggle">☰</button>
+                <div class="ms-auto d-flex align-items-center">
+                    <div class="dropdown me-3">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                           <!--<img src="{% static 'img/avatar.png' %}" alt="Avatar" class="rounded-circle" width="35">
+                           --->
+                            <img src="{{ request.user.profile.get_avatar_url}}" alt="Login Icon" class="rounded-circle" width="40">
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{% url 'profile' %}">Profile</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form method="POST" action="{% url 'logout' %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="dropdown-item">Logout</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </nav>
+        <div class="container-fluid p-4">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+{#<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>#}
+<script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+<script>
+document.getElementById("menu-toggle").addEventListener("click", function() {
+    document.getElementById("sidebar").classList.toggle("collapsed");
+});
+</script>
+</body>
+</html>

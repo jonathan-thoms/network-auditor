@@ -1,0 +1,17 @@
+[Unit]
+Description=Gunicorn daemon for GSmart Audit Tool
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/home/deploy/audit
+EnvironmentFile=/home/deploy/audit/.env
+ExecStart=/home/deploy/audit/venv/bin/gunicorn \
+    --config gunicorn.conf.py \
+    audit.wsgi:application
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

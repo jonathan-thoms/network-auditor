@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">{{ request.user.username }}'s Profile</h4>
+        </div>
+        <div class="card-body text-center">
+
+            <!-- Current Avatar -->
+            <div class="mb-4">
+                <img src="{{ request.user.profile.avatar.url }}" 
+                     alt="Avatar" 
+                     width="150" height="150"
+                     class="rounded-circle border border-primary p-1">
+            </div>
+
+            <!-- Avatar Upload Form -->
+            <form method="POST" enctype="multipart/form-data" class="d-inline-block text-start w-50 mx-auto">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label class="form-label" for="{{ form.avatar.id_for_label }}">Avatar</label>
+                    {{ form.avatar }}
+                    {% if form.avatar.errors %}
+                        <div class="text-danger small">{{ form.avatar.errors }}</div>
+                    {% endif %}
+                </div>
+
+
+                <div class="mb-3">
+                    <button type="submit" class="btn btn-success w-100">Update Avatar</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

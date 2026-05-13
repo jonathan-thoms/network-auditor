@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+
+    <!-- Centered Toggle Buttons -->
+    <div class="d-flex justify-content-center mb-4">
+        <button class="btn btn-outline-primary mx-2" id="btnGSAudit">GS Audit</button>
+    </div>
+
+    <!-- Upload Section (Hidden Initially) -->
+    <div id="uploadSection" class="card shadow p-4 mb-4 d-none">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <h5 id="uploadTitle" class="mb-3 text-center fw-bold">GS Audit Upload</h5>
+            <div class="row" style="padding: 0.3rem">
+            <!-- SiteId -->
+                <div class="col-md-6" style="padding: 0.2rem">
+                    <label for="sites" class="form-label"> SiteId :</label>
+                    <input type="text" class="custom-select col-md-5" id="sites" name="sites" placeholder="SiteId.." required>
+                </div>
+                <!-- SW Version -->
+                <div class="col-md-6" style="padding: 0.2rem">
+                    <label for="swrel" class="form-label"> SW Version :</label>
+                    <select class="custom-select col-md-5" name="swrel" id="swrel" required>
+                        <option value="" selected hidden>Select SW Version...</option>
+                        {% for item in swrel %}<option value="{{item}}">{{item}}</option>{% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="row" style="padding: 0.3rem">
+            <!-- Market -->
+                <div class="col-md-6" style="padding: 0.2rem">
+                    <label for="mname" class="form-label"> Market :</label>
+                    <select class="custom-select col-md-5" name="mname" id="mname" required>
+                        <option value="" selected hidden>Select Market...</option>
+                        {% for item in mname %}<option value="{{item}}">{{item}}</option>{% endfor %}
+                    </select>
+                </div>
+                <!-- Type -->
+                <div class="col-md-6" style="padding: 0.2rem">
+                    <label for="audit_type" class="form-label"> Type :</label>
+                    <select class="custom-select col-md-5" name="audit_type" id="audit_type" required>
+                        <option value="" selected hidden>Select Audit Type...</option>
+                        {% for item in audit_type %}<option value="{{item}}">{{item}}</option>{% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="row" style="padding: 0.3rem">
+                <!-- B66 dlonly(earfcn) -->
+                <div class="col-md-12" style="padding: 0.2rem">
+                    <label for="dlonly" class="form-label"> B66 dlonly(earfcn) :</label>
+                    <input class="custom-select col-md-6" name="dlonly" id="dlonly"
+                        placeholder="earfcn sepeareted by comma">
+                </div>
+            </div>
+            <div class="row" style="padding: 0.3rem">
+                <!-- File Upload -->
+                <div class="col-md-12" style="padding: 0.2rem">
+                    <label for="software_log" class="form-label">DCGK : </label>
+                    <input type="file" class="clearable-file-input col-md-6" id="software_log" name="software_log"
+                           required accept=".zip" placeholder="Upload zip DCGKs file...">
+                </div>
+            </div>
+{#            form-control custom-file #}
+            <!-- Buttons -->
+            <div class="d-flex justify-content-center gap-3">
+{#                <button type="submit" class="btn btn-success">Upload Files</button>#}
+                <button type="submit" class="btn btn-danger">Generate Audit Report</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Table Section -->
+    <div class="card shadow">
+        <div class="card-body">
+            <!-- Filters -->
+{#            <form class="row g-3 mb-3">#}
+{#                <div class="col-md-3">#}
+{#                    <label for="circle" class="form-label">Site</label>#}
+{#                    <select class="form-select" id="circle" name="circle">#}
+{#                        <option selected>Site</option>#}
+{#                        <option>AP</option>#}
+{#                        <option>TN</option>#}
+{#                    </select>#}
+{#                </div>#}
+{#                <div class="col-md-3">#}
+{#                    <label for="enm" class="form-label">Market</label>#}
+{#                    <select class="form-select" id="enm" name="enm">#}
+{#                        <option selected>Market</option>#}
+{#                        <option>enm1</option>#}
+{#                        <option>enm2</option>#}
+{#                    </select>#}
+{#                </div>#}
+{#                <div class="col-md-3">#}
+{#                    <label for="activity" class="form-label">User</label>#}
+{#                    <select class="form-select" id="activity" name="activity">#}
+{#                        <option selected>Both</option>#}
+{#                        <option>Pre Check</option>#}
+{#                        <option>Post Check</option>#}
+{#                    </select>#}
+{#                </div>#}
+{#            </form>#}
+
+            <!-- Activity Table -->
+            <table class="table table-bordered table-hover text-center" id="myTable">
+                <thead class="table-primary">
+                    <tr>
+                        <th>SN</th>
+                        <th>Site</th>
+                        <th>Market</th>
+                        <th>Software</th>
+                        <th>Type</th>
+                        <th>User</th>
+                        <th>Status</th>
+                        <th>Time</th>
+                        <th>Download</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for job in jobs %}
+                    <tr>
+                        <td>{{forloop.counter}}</td>
+                        <td>{{job.sites}}</td>
+                        <td>{{job.market}}</td>
+                        <td>{{job.version}}</td>
+                        <td>{{job.audit_type}}</td>
+
+                        <td>{{job.user.username}}</td>
+                        <td>{{job.create_dt|date:'m-d-Y H:i'}}</td>
+                        <td>{{job.status}}</td>
+                        <td>
+                            {% if job.status == 'Completed' %}
+                            <a href="/media/auditor/{{job.script}}"><i class="fa fa-download" style="color:green"></i>Script </a>
+                            {% elif job.status == 'Running' or job.status == 'Queued' %}
+                            <div class="fa-2x">  <i class="fas fa-spinner fa-spin " style="font-size:24px;color:orange"></i></div>
+                            {% else %}
+                            <a href="/media/auditor/{{job.script}}"><i class="fa fa-download" style="color:red">Error </i></a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {%endfor%}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Script to Toggle Upload Section -->
+<script>
+document.getElementById("btnGSAudit").addEventListener("click", function () {
+    document.getElementById("uploadSection").classList.remove("d-none");
+    document.getElementById("uploadTitle").innerText = "GS Audit Upload";
+    document.getElementById("logLabel").innerText = "DCGKs Files";
+});
+</script>
+{% endblock %}

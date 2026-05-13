@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        {% if request.user.is_superuser %}
+            <!-- Admin cards -->
+            <div class="col-md-2">
+                <div class="card bg-primary text-white p-3">
+                    <h5>Total Users</h5>
+                    <h3>{{ total_users }}</h3>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card bg-secondary text-white p-3">
+                    <h5>Inactive Users</h5>
+                    <h3>{{ inactive_users }}</h3>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card bg-success text-white p-3">
+                    <h5>Active Users</h5>
+                    <h3>{{ active_users }}</h3>
+                </div>
+            </div>
+        {% endif %}
+        <!-- Integration success card -->
+        <div class="col-md-2">
+            <div class="card bg-info text-white p-3">
+                <h5>GS Audit Processed</h5>
+                <h3>{{ jobs_count }}</h3>
+            </div>
+        </div>
+        <!-- Integration success card -->
+        <div class="col-md-2">
+            <div class="card bg-success text-white p-3">
+                <h5>GS Audit Successful</h5>
+                <h3>{{ success_jobs_count }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Integration table -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white">
+            <h5>GS Audit</h5>
+        </div>
+        <div class="card-body table-responsive">
+            <!-- Activity Table -->
+            <table class="table table-bordered table-hover text-center" id="myTable">
+                <thead class="table-primary">
+                    <tr>
+                        <th>SN</th>
+                        <th>Site</th>
+                        <th>Market</th>
+                        <th>Software</th>
+                        <th>Type</th>
+                        <th>User</th>
+                        <th>Status</th>
+                        <th>Time</th>
+                        <th>Download</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for job in jobs %}
+                    <tr>
+                        <td>{{forloop.counter}}</td>
+                        <td>{{job.sites}}</td>
+                        <td>{{job.market}}</td>
+                        <td>{{job.version}}</td>
+                        <td>{{job.audit_type}}</td>
+
+                        <td>{{job.user.username}}</td>
+                        <td>{{job.create_dt|date:'m-d-Y H:i'}}</td>
+                        <td>{{job.status}}</td>
+                        <td>
+                            {% if job.status == 'Completed' %}
+                            <a href="/media/auditor/{{job.script}}"><i class="fa fa-download" style="color:green"></i>Script </a>
+                            {% elif job.status == 'Running' or job.status == 'Queued' %}
+                            <div class="fa-2x">  <i class="fas fa-spinner fa-spin " style="font-size:24px;color:orange"></i></div>
+                            {% else %}
+                            <a href="/media/auditor/{{job.script}}"><i class="fa fa-download" style="color:red">Error </i></a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {%endfor%}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

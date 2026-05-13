@@ -1,0 +1,26 @@
+body { font-family: 'Segoe UI', sans-serif; background-color: #f4f6f9; }
+#wrapper { display: flex; min-height: 100vh; }
+
+/* Sidebar */
+#sidebar { width: 220px; transition: all 0.3s; }
+#sidebar.collapsed { width: 60px; }
+#sidebar ul li a { display: block; padding: 10px; }
+#sidebar ul li a:hover { color: #00aaff; text-decoration: none; }
+
+/* Cards */
+.card { border-radius: 0.5rem; transition: transform 0.3s, box-shadow 0.3s; }
+.card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.15); }
+
+/* Avatar */
+.navbar img.rounded-circle { border: 2px solid #007bff; }
+.avatar { width: 100%; height: 200px; object-fit: cover; border-bottom: 1px solid #ddd; }
+
+label {
+    width: 150px;
+    display: inline-block;
+}
+
+.my-label-class {
+    width: 200px;
+    display: inline-block;
+}

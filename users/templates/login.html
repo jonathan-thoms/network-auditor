@@ -1,0 +1,148 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Amentum G-Smart</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link href="{% static 'images/logo.ico' %}" rel="icon" type="image/x-icon">
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&display=swap" rel="stylesheet">
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                height: 100vh;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                font-family: 'Poppins', sans-serif;
+                color: #fff;
+                overflow: hidden;
+                position: relative;
+            }
+
+            /* Fullscreen GIF background */
+            body::before {
+                content: "";
+                position: absolute;
+                top: 0; left: 0;
+                width: 100%;
+                height: 100%;
+                background: url("{% static 'images/bg.gif' %}") no-repeat center center fixed;
+                background-size: cover;
+                z-index: -2;
+            }
+
+            /* Dark overlay for readability */
+            body::after {
+                content: "";
+                position: absolute;
+                top: 0; left: 0;
+                width: 100%; height: 100%;
+                background: rgba(0, 0, 0, 0.65);
+                z-index: -1;
+            }
+
+            .login-container {
+                position: relative;
+                z-index: 1;
+                background: rgb(13 73 197 / 85%);
+                padding: 40px;
+                border-radius: 15px;
+                box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.7);
+                width: 350px;
+                animation: fadeInUp 1.2s ease-in-out;
+                text-align: center;
+            }
+
+            .login-container h2 {
+                margin-bottom: 20px;
+                color: #00ffcc;
+                text-shadow: 0 0 8px #00ffcc, 0 0 15px #00ffcc;
+            }
+
+            .form-control {
+                width: 100%;
+                padding: 12px;
+                margin: 10px 0;
+                border: none;
+                border-radius: 8px;
+                outline: none;
+                font-size: 15px;
+            }
+
+            input[type="text"], input[type="password"] {
+                background: #1a1a1a;
+                color: #fff;
+                box-shadow: inset 0 0 5px #00ffcc;
+            }
+
+            button {
+                width: 100%;
+                padding: 12px;
+                background: linear-gradient(90deg, #00ffcc, #0077ff);
+                border: none;
+                border-radius: 8px;
+                color: #fff;
+                font-size: 16px;
+                font-weight: bold;
+                cursor: pointer;
+                transition: 0.3s ease-in-out;
+                box-shadow: 0px 0px 15px #00ffcc;
+            }
+
+            button:hover {
+                background: linear-gradient(90deg, #0077ff, #00ffcc);
+                transform: scale(1.05);
+            }
+
+            @keyframes fadeInUp {
+                0% { opacity: 0; transform: translateY(30px); }
+                100% { opacity: 1; transform: translateY(0); }
+            }
+
+            .footer-text {
+                margin-top: 15px;
+                font-size: 13px;
+                color: #bbb;
+            }
+            .footer-text a {
+                color: #00ffcc;
+                text-decoration: none;
+            }
+            .footer-text a:hover {
+                text-decoration: underline;
+            }
+        </style>
+    </head>
+<body>
+<div class="login-container">
+    <h2>Amentum G-Smart Login</h2>
+    {% for message in messages %}<div><ul><p style="color:red">{{message}}</p></ul></div>{% endfor %}
+    {% if messages %}
+    <div>
+        <ul class="messages">
+        {% for message in messages %}
+        <li class="{{message.tags}}">{{message}}</li>
+        {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    <!-- Login Form -->
+    <form method="post">
+        {% csrf_token %}
+        <input type="text" name="username" class="form-control" placeholder="Username" required>
+        <input type="password" name="password" class="form-control" placeholder="Password" required>
+        <button type="submit" name="login">Login</button>
+    </form>
+    <!-- Reset Password Form -->
+{#            <hr style="margin:20px 0; border: 1px solid #00ffcc;">#}
+{#            <h3 style="color:#00ffcc; margin-bottom:10px;">Forgot Password?</h3>#}
+{#            <form method="post">#}
+{#                {% csrf_token %}#}
+{#                <input type="email" name="email" class="form-control" placeholder="Enter Username or Email" required>#}
+{#                <button type="submit" name="reset">Reset Password</button>#}
+{#            </form>#}
+</div>
+</body>
+</html>
