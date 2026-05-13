@@ -8,7 +8,7 @@ set -e
 
 APP_USER="deploy"
 APP_DIR="/home/$APP_USER/audit"
-REPO_URL="REPLACE_WITH_YOUR_GIT_REPO_URL"
+REPO_URL="https://github.com/jonathan-thoms/network-auditor.git"
 DOMAIN="gsmarttool.com"
 
 echo "============================================"
