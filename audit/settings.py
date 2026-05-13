@@ -10,11 +10,17 @@ SECRET_KEY = os.environ.get(
     'SamtUNt@$%1981mpxo$!-6!z0oKJgh&*816743$$cd^_Rsm^&%$#*=dv%gq91_=ercq3pd$mt('
 )
 
-DEBUG = os.environ.get('DJANGO_DEBUG', 'False').lower() in ('true', '1', 'yes')
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() in ('true', '1', 'yes')
 
 ALLOWED_HOSTS = os.environ.get(
     'DJANGO_ALLOWED_HOSTS',
-    'gsmarttool.com,www.gsmarttool.com,localhost,127.0.0.1'
+    'gsmarttool.com,www.gsmarttool.com,localhost,127.0.0.1,.pythonanywhere.com'
+).split(',')
+
+# Required for PythonAnywhere CSRF validation
+CSRF_TRUSTED_ORIGINS = os.environ.get(
+    'CSRF_TRUSTED_ORIGINS',
+    'https://*.pythonanywhere.com,https://gsmarttool.com,https://www.gsmarttool.com'
 ).split(',')
 
 INSTALLED_APPS = [
@@ -85,8 +91,11 @@ USE_I18N = True
 USE_TZ = True
 SESSION_COOKIE_AGE = 3600
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+# Static files — PythonAnywhere serves from STATIC_ROOT after collectstatic
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 
@@ -96,7 +105,7 @@ LOGIN_URL = 'login'
 # Optional: redirect after login
 LOGIN_REDIRECT_URL = 'dashboard'
 
-# settings.py
+# Email configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = ''
 EMAIL_PORT = 587

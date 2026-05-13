@@ -15,10 +15,8 @@ db.sqlite3-journal
 media/
 *.log
 
-# Static files (collected by collectstatic)
-# Keep the source static/ dir but ignore collectstatic output
+# Static files (collected by collectstatic into staticfiles/)
 staticfiles/
-static/admin/
 
 # IDE
 .vscode/
