@@ -14,13 +14,13 @@ DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() in ('true', '1', 'yes')
 
 ALLOWED_HOSTS = os.environ.get(
     'DJANGO_ALLOWED_HOSTS',
-    'gsmarttool.com,www.gsmarttool.com,localhost,127.0.0.1,.pythonanywhere.com'
+    'gsmart.ignorelist.com,gsmarttool.com,www.gsmarttool.com,localhost,127.0.0.1,.pythonanywhere.com'
 ).split(',')
 
-# Required for PythonAnywhere CSRF validation
+# CSRF trusted origins for HTTPS
 CSRF_TRUSTED_ORIGINS = os.environ.get(
     'CSRF_TRUSTED_ORIGINS',
-    'https://*.pythonanywhere.com,https://gsmarttool.com,https://www.gsmarttool.com'
+    'https://gsmart.ignorelist.com,https://*.pythonanywhere.com,https://gsmarttool.com,https://www.gsmarttool.com'
 ).split(',')
 
 INSTALLED_APPS = [
