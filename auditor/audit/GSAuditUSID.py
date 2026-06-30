@@ -521,7 +521,7 @@ class GSAuditUSID:
                     F'ESS': ess,
                     F'ESS_N30': False,
                     F'NGFW': cell.endswith('_G'),
-                    F'Catm1': data.get('catm1SupportEnabled', 'false') == 'true',
+                    F'Catm1': data.get('catm1SupportEnabled', '') == 'true',
                     cell_type: True,
                     layer: True,
                     F"B{band}": True,
@@ -537,6 +537,8 @@ class GSAuditUSID:
                     F'DL_ENDC_Buffer': data.get('endcSetupDlPktVolThr', '0') != '0' or data.get('endcSetupDlPktAgeThr', '0') != '0',
                     F'ECDD': ECDD_flag,
                     F'ECDD_FDD': ECDD_flag,
+                    F'Catm1_hicap': data.get('catm1SupportEnabled', '') == 'true' and
+                                    data.get('dedicatedMpdcchCss2Br', '') == 'true',
                 }
                 cell_dict[cell].update({'ESS_B30': cell_dict[cell].get('ESS', False) and cell_dict[cell].get('B30', False)})
             

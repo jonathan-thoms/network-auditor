@@ -3,25 +3,13 @@ import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+SECRET_KEY = 'SamtUNt@$%1981mpxo$!-6!z0oKJgh&*816743$$cd^_Rsm^&%$#*=dv%gq91_=ercq3pd$mt('
 
-# Read from environment variables (set in .env on the server)
-SECRET_KEY = os.environ.get(
-    'DJANGO_SECRET_KEY',
-    'SamtUNt@$%1981mpxo$!-6!z0oKJgh&*816743$$cd^_Rsm^&%$#*=dv%gq91_=ercq3pd$mt('
-)
+# DEBUG = True
+DEBUG = False
 
-DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() in ('true', '1', 'yes')
-
-ALLOWED_HOSTS = os.environ.get(
-    'DJANGO_ALLOWED_HOSTS',
-    'gsmart.strangled.net,gsmarttool.com,www.gsmarttool.com,localhost,127.0.0.1,.pythonanywhere.com'
-).split(',')
-
-# CSRF trusted origins for HTTPS
-CSRF_TRUSTED_ORIGINS = os.environ.get(
-    'CSRF_TRUSTED_ORIGINS',
-    'https://gsmart.strangled.net,https://*.pythonanywhere.com,https://gsmarttool.com,https://www.gsmarttool.com'
-).split(',')
+# ALLOWED_HOSTS = ['195.26.250.2', '127.0.0.1', 'localhost', 'www.gsmarttool.com', 'gsmarttool.com']
+ALLOWED_HOSTS = ['gsmarttool.com', 'localhost', 'www.gsmarttool.com', ]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -91,11 +79,8 @@ USE_I18N = True
 USE_TZ = True
 SESSION_COOKIE_AGE = 3600
 
-# Static files — PythonAnywhere serves from STATIC_ROOT after collectstatic
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
-
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 
@@ -105,7 +90,7 @@ LOGIN_URL = 'login'
 # Optional: redirect after login
 LOGIN_REDIRECT_URL = 'dashboard'
 
-# Email configuration
+# settings.py
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = ''
 EMAIL_PORT = 587
