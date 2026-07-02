@@ -15,13 +15,14 @@ def highlight_even_row(*, row) -> list:
 def gs_audit_report_color_rows(*, row) -> list:
     if row['flag'] in ['True', 'TRUE', True]: return ['' for _ in row]
     else:
+        perm = str(row['Permission']).lower() if row['Permission'] else ''
         if row['GSValue'].startswith('GS_Error'):
             return ['background-color: red; color: white; border: 2px solid green' for _ in row]
-        elif row['Permission'].lower().startswith('global'):
+        elif perm.startswith('global'):
             return ['background-color: red' for _ in row]
-        elif row['Permission'].lower().startswith('local'):
+        elif perm.startswith('local'):
             return ['background-color: cyan' for _ in row]
-        elif row['Permission'].lower().startswith('not auditable'):
+        elif perm.startswith('not auditable'):
             return ['background-color: dimgray' for _ in row]
         else:
             return ['background-color: crimson' for _ in row]

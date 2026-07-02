@@ -14,7 +14,7 @@ class GSAuditLogic:
                  'UlCoMP', 'IDLe', 'MMBB', 'hicap', 'GPS', 'PTP', 'PTP_FREQ', 'PTP_TIME',
                  'IPV6', 'IPv4', 'PSHO', 'AASFDD', 'InterENBCA',
                  'mRBS', 'Radio2203', 'AIR1641', 'MultiCabinet', 'NRULCAHB', 'FirstNetHiCap',
-                 'DaylightSavingMarket'] +
+                 'DaylightSavingMarket', '10_to_12_n77_Cells'] +
                 ['s__=1cells'] +
                 [F's__>{val}cells' for val in [1, 3, 6, 9, 12, 18]] +
                 [F's__<={val}cells' for val in [1, 3, 6, 9, 12, 18]]
@@ -74,23 +74,31 @@ class GSAuditLogic:
                 operator.append(expression[index])
                 index += 1
             elif expression[index] == ')':
-                while operator[-1] != '(':
-                    op = operator.pop()
-                    left = values.pop()
-                    right = values.pop()
-                    values.append(self.calculate_exp(op, left, right, cell, site, mo_level))
-                operator.pop()
+                try:
+                    while len(operator) > 0 and operator[-1] != '(':
+                        op = operator.pop()
+                        left = values.pop()
+                        right = values.pop()
+                        values.append(self.calculate_exp(op, left, right, cell, site, mo_level))
+                    if len(operator) > 0:
+                        operator.pop()
+                except IndexError:
+                    print(f"Syntax Error in Logic Expression: '{expression}'")
+                    return False
                 index += 1
             else:
                 op_val, index = self.get_op_val(expression, index)
                 if op_val.lower() in ('and', 'or', '|', '&'): operator.append(op_val.lower())
-                else: values.append(op_val)
-        while len(operator) != 0:
-            op = operator.pop()
-            left = values.pop()
-            right = values.pop()
-            values.append(self.calculate_exp(op, left, right, cell, site, mo_level))
-            # print(F'{left}--{op}---{right}-- {self.calculate_exp(op, left, right, cell, site, mo_level)}')
-        # print(F'expression:"{expression}" -- cell:{cell} -- site:{site} -- mo_level:{mo_level} ---- '
-        #       F'{self.get_dict_val(values[0], cell, site, mo_level) if len(values) == 1 else None}')
-        return self.get_dict_val(values[0], cell, site, mo_level) if len(values) == 1 else None
+                elif op_val != '': values.append(op_val)
+        
+        try:
+            while len(operator) != 0:
+                op = operator.pop()
+                left = values.pop()
+                right = values.pop()
+                values.append(self.calculate_exp(op, left, right, cell, site, mo_level))
+        except IndexError:
+            print(f"Syntax Error in Logic Expression: '{expression}'")
+            return False
+            
+        return self.get_dict_val(values[0], cell, site, mo_level) if len(values) >= 1 else None

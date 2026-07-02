@@ -134,6 +134,16 @@ class GSAuditUSID:
         # del self.utran_band_dict
         del self.earfcndl_lb_850
 
+        try:
+            dump_file_path = os.path.join(self.outdir, F'{self.site_id}_param_dict_dump.txt')
+            with open(dump_file_path, 'w') as f:
+                json.dump(self.param_dict, f, indent=4)
+            if hasattr(self, 'log') and hasattr(self.log, 'info'):
+                self.log.info(F"Dumped parameter dictionary to {dump_file_path}")
+        except Exception as e:
+            if hasattr(self, 'log') and hasattr(self.log, 'error'):
+                self.log.error(F"Failed to dump parameter dictionary: {e}")
+
     def update_nh_mocn_gw_nr_dc_mn_nr_dc_sn(self):
         """
         NH_MOCN_GW
@@ -1323,6 +1333,9 @@ class GSAuditUSID:
             self.param_dict.get('sites').get(site).get('para').update(update_site_param_dict)
 
         for site in self.param_dict.get('sites'):
+            n77_count = len([c for c in self.param_dict.get('sites').get(site).get('cells').values() if c.get('band') == '77'])
+            self.param_dict.get('sites').get(site).get('para')['10_to_12_n77_Cells'] = (10 <= n77_count <= 12)
+
             self.param_dict.get('sites').get(site).get('para')['TMBB'] = bool(
                 bool(self.param_dict.get('sites').get(site).get('para').get('NR_MB+_n77') or
                  self.param_dict.get('sites').get(site).get('para').get('NR_MB+_n77G')) and

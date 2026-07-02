@@ -71,9 +71,13 @@ class GSAuditDCGK:
     def get_mos_and_its_child_with_mo(self, mo): return [mo] + [_ for _ in self.mo_list if re.match(F'{mo},', _)] if len(mo) > 0 else []
 
     def get_first_mo_from_ref_parameter(self, mo):
-        if mo in [None, 'None', '', 'N/F', [], {}]: mo = ''
-        elif type(mo) == str: mo = [_ for _ in self.mo_list if _.endswith(mo)][0]
-        elif (type(mo) == list) and (len(mo) > 0): return [_ for _ in self.mo_list if _.endswith(mo[0])][0]
-        return '' if mo in [None, 'None', '', [], {}] else mo
+        if mo in [None, 'None', '', 'N/F', [], {}]: return ''
+        elif type(mo) == str:
+            matches = [_ for _ in self.mo_list if _.endswith(mo)]
+            return matches[0] if len(matches) > 0 else ''
+        elif (type(mo) == list) and (len(mo) > 0):
+            matches = [_ for _ in self.mo_list if _.endswith(mo[0])]
+            return matches[0] if len(matches) > 0 else ''
+        return ''
 
     def get_berrer_info(self): pass
