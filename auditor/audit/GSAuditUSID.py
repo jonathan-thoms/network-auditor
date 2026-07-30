@@ -448,6 +448,7 @@ class GSAuditUSID:
                     F'ECDD': ECDD_flag,
                     F'ECDD_FDD': ECDD_flag and band != '77',
                     F'ECDD_TDD': ECDD_flag and band == '77',
+                    'USID_FREQ': True,
                 }
                 # NR_MB+_n77, NR_MB+_n77G, NR_MB+_n77D
                 if band == '77':
@@ -549,6 +550,8 @@ class GSAuditUSID:
                     F'ECDD_FDD': ECDD_flag,
                     F'Catm1_hicap': data.get('catm1SupportEnabled', '') == 'true' and
                                     data.get('dedicatedMpdcchCss2Br', '') == 'true',
+                    'USID_FREQ': True,
+                    'crsgain>0': int(data.get('crsGain', '0')) > 0,
                 }
                 cell_dict[cell].update({'ESS_B30': cell_dict[cell].get('ESS', False) and cell_dict[cell].get('B30', False)})
             
@@ -636,6 +639,8 @@ class GSAuditUSID:
                     F'DL_ENDC_Buffer': data.get('endcSetupDlPktVolThr', '0') != '0' or data.get('endcSetupDlPktAgeThr', '0') != '0',
                     F'ECDD': ECDD_flag,
                     F'ECDD_TDD': ECDD_flag,
+                    'USID_FREQ': True,
+                    'crsgain>0': int(data.get('crsGain', '0')) > 0,
                 }
                 cell_dict[cell].update({'ESS_B30': cell_dict[cell].get('ESS', False) and cell_dict[cell].get('B30', False)})
 
@@ -1151,10 +1156,10 @@ class GSAuditUSID:
                 'layer': layer,
                 'band': band,
                 'N5_REL': False,
-                'USID_FREQ': len(self.df_nr_cells.loc[self.df_nr_cells.ssbfreq == ssbfreq].index) > 0,
+                'USID_FREQ': len(self.df_nr_cells.loc[self.df_nr_cells.ssbfreq.astype(str) == str(ssbfreq)].index) > 0,
                 'E///_FREQ': int(ssb.get('ssbsubcarrierspacing', ssb.get('scc', '0'))) <= 120,
                 'SA': False,
-                'ESS': len(self.df_nr_cells.loc[((self.df_nr_cells.ssbfreq == ssbfreq) & self.df_nr_cells.ESS)].index) > 0,
+                'ESS': len(self.df_nr_cells.loc[((self.df_nr_cells.ssbfreq.astype(str) == str(ssbfreq)) & self.df_nr_cells.ESS)].index) > 0,
                 'NR_MB+_n77': band == '77',
                 'NR_MB+_n77_n_>40MHz': band == '77' and int(ssb.get('bschannelbwdl', 0)) > 40,
                 'NR_MB+_n77D': 646666 <= int(ssbfreq) <= 665333 and band == '77',
@@ -1691,7 +1696,10 @@ class GSAuditUSID:
             for earfcn in fdd_earfcn:
                 for row in self.df_gs.loc[(self.df_gs.MOC == F'RATFreqPrio={ret_id}') & (self.df_gs.Parameter == 'freqPrioListEUTRA')].itertuples():
                     if self.logic.evaluate(row.Logic, cell=earfcn, site='', mo_level='earfcn'):
-                        gold_val = json.loads(row.GSValue)
+                        try:
+                            gold_val = json.loads(row.GSValue) if row.GSValue else {}
+                        except json.JSONDecodeError:
+                            gold_val = {}
                         gold_val |= {'arfcnValueEUtranDl': earfcn}
                         all_gold_val.append(gold_val)
                         suffix += F' and {earfcn} as {row.Suffix}'

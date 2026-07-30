@@ -84,8 +84,8 @@ class Audit03LTERelation(GSAuditBase):
                     if len([_ for _ in suffix_mapped if _ in ('OWNFREQ', 'INTERFREQ')]) > 0:
                         if len(suffix_mapped) == 1: logic_flag = True
                         cell_earfcn = self.usid.param_dict['sites'][r.site]['cells'][r.cell]['earfcndl']
-                        if 'OWNFREQ' in suffix_mapped: logic_flag = logic_flag and (cell_earfcn == r.earfcn)
-                        if 'INTERFREQ' in suffix_mapped: logic_flag = logic_flag and (cell_earfcn != r.earfcn)
+                        if 'OWNFREQ' in suffix_mapped: logic_flag = logic_flag and (str(cell_earfcn) == str(r.earfcn))
+                        if 'INTERFREQ' in suffix_mapped: logic_flag = logic_flag and (str(cell_earfcn) != str(r.earfcn))
                 if logic_flag: self.r_list_for_gs_para(r.site, r.fdn, para_dict.get(row_gs.Parameter, 'N/F'), row_gs)
 
     def gs_audit_for_eutrancellrelation(self):
@@ -98,18 +98,19 @@ class Audit03LTERelation(GSAuditBase):
                 if not logic_flag:
                     suffix_mapped = [_.strip() for _ in row_gs.Logic.split('|')]
                     for cond in suffix_mapped:
-                        if cond in ('COSECTOR', 'non_COSECTOR', 'CARRIERAGG_COSECTOR'): continue
+                        if cond in ('COSECTOR', 'non_COSECTOR', 'CARRIERAGG_COSECTOR', 'INTRA_USID'): continue
                         else:
                             source_cond, target_cond = self.split_source_target(cond)
                             logic_flag = logic_flag or (self.logic.evaluate(source_cond, cell=r.cell, site=r.site) and
                                                         self.logic.evaluate(target_cond, cell=r.t_cell, site=r.t_site))
                             if logic_flag: break
-                    if len([_ for _ in suffix_mapped if _ in ('COSECTOR', 'non_COSECTOR', 'CARRIERAGG_COSECTOR')]) > 0:
+                    if len([_ for _ in suffix_mapped if _ in ('COSECTOR', 'non_COSECTOR', 'CARRIERAGG_COSECTOR', 'INTRA_USID')]) > 0:
                         if len(suffix_mapped) == 1: logic_flag = True
                         if 'COSECTOR' in suffix_mapped: logic_flag = logic_flag and self.usid.get_co_sector_for_lte_cell(r.cell, r.t_cell)
                         if 'non_COSECTOR' in suffix_mapped: logic_flag = logic_flag and (not self.usid.get_co_sector_for_lte_cell(r.cell, r.t_cell))
                         if 'CARRIERAGG_COSECTOR' in suffix_mapped: logic_flag = logic_flag and \
                                                                                 self.usid.check_carrier_agg_flag(r.site, r.cell, r.t_site, r.t_cell)
+                        if 'INTRA_USID' in suffix_mapped: logic_flag = logic_flag and (r.site == r.t_site)
                 if logic_flag: self.r_list_for_gs_para(r.site, r.fdn, para_dict.get(row_gs.Parameter, 'N/F'), row_gs)
 
     def gs_audit_for_eutrancellrelation_ishoallowedbr(self):

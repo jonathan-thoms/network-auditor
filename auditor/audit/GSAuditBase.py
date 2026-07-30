@@ -52,9 +52,12 @@ class GSAuditBase:
                 start, end = [int(_) for _ in gs_val.split('..')]
                 gs_val, op = [start, end], 'between'
         if site_val_type in (dict, list):
-            if (type(gs_val) == str) and (gs_val != ''):
+            if (type(gs_val) == str) and (gs_val.strip() != ''):
                 if "'" in gs_val: gs_val = gs_val.replace("'", '"')
-                gs_val = json.loads(gs_val)
+                try:
+                    gs_val = json.loads(gs_val)
+                except json.JSONDecodeError:
+                    gs_val = {} if site_val_type == dict else []
         return False if site_val == 'N/F' else self.evaluate_site_value_gs_value(site_val, gs_val, op, site_val_type)
     
     def evaluate_site_value_gs_value(self, site_val, gs_val, op, site_val_type):
