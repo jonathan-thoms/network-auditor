@@ -64,6 +64,8 @@ class GSAuditLogic:
         # print(F'expression:"{expression}" -- cell:{cell} -- site:{site} -- mo_level:{mo_level}')
         if pd.isnull(expression) or expression.strip() == '': return True
         expression = expression.strip()
+        expression = expression.replace('(<10 or >12_n77_Cells)', 'non_10_to_12_n77_Cells')
+        expression = expression.replace('(>=10 and <=12_n77_Cells)', '10_to_12_n77_Cells')
         operator = []
         values = []
         index = 0
