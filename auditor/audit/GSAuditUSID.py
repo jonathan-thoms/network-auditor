@@ -1344,7 +1344,15 @@ class GSAuditUSID:
             self.param_dict.get('sites').get(site).get('para').update(update_site_param_dict)
 
         for site in self.param_dict.get('sites'):
-            n77_count = len([c for c in self.param_dict.get('sites').get(site).get('cells').values() if c.get('band') == '77'])
+            n77_count = 0
+            for c in self.param_dict.get('sites').get(site).get('cells').values():
+                if c.get('band') == '77':
+                    try:
+                        arfcn = int(c.get('earfcndl') or c.get('arfcndl') or 0)
+                        if 620000 <= arfcn <= 680000:
+                            n77_count += 1
+                    except (ValueError, TypeError):
+                        pass
             self.param_dict.get('sites').get(site).get('para')['10_to_12_n77_Cells'] = (10 <= n77_count <= 12)
 
             self.param_dict.get('sites').get(site).get('para')['TMBB'] = bool(
