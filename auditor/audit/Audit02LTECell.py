@@ -23,7 +23,11 @@ class Audit02LTECell(GSAuditBase):
                 self.air = 1 if self.usid.param_dict['sites'][site.siteid]['cells'][cell]['OnAir'] else 0
                 c_mos = [_ for _ in site.mo_list if _.startswith(cell_mo) and len([i for i in skip_moc if F',{skip_moc}=' in _]) == 0]
                 sec_mo = self.usid.param_dict.get('sites').get(site.siteid).get('cells').get(cell).get('sec_mo')
-                if sec_mo not in ['', None, 'None']: c_mos += sec_mo
+                if sec_mo not in ['', None, 'None', []]:
+                    if isinstance(sec_mo, list):
+                        for s_m in sec_mo: c_mos += site.get_mos_and_its_child_with_mo(s_m)
+                    else:
+                        c_mos += site.get_mos_and_its_child_with_mo(sec_mo)
                 for mo in c_mos:
                     para_dict = site.dcg.get(mo, {})
                     for row_gs in self.df_gs.loc[(self.df_gs.MOC == mo.split(',')[-1].split('=')[0])].itertuples():
@@ -47,7 +51,11 @@ class Audit02LTECell(GSAuditBase):
                 self.air = 1 if self.usid.param_dict['sites'][site.siteid]['cells'][cell]['OnAir'] else 0
                 c_mos = [_ for _ in site.mo_list if _.startswith(cell_mo) and len([i for i in skip_moc if F',{skip_moc}=' in _]) == 0]
                 sec_mo = self.usid.param_dict.get('sites').get(site.siteid).get('cells').get(cell).get('sec_mo')
-                if sec_mo not in ['', None, 'None']: c_mos += sec_mo
+                if sec_mo not in ['', None, 'None', []]:
+                    if isinstance(sec_mo, list):
+                        for s_m in sec_mo: c_mos += site.get_mos_and_its_child_with_mo(s_m)
+                    else:
+                        c_mos += site.get_mos_and_its_child_with_mo(sec_mo)
                 for mo in c_mos:
                     for para in self.df_gs.loc[(self.df_gs.MOC == mo.split(',')[-1].split('=')[0])].Parameter.unique():
                         if F'{mo}.{para}' not in self.process_list:

@@ -12,6 +12,7 @@ class GSAuditBase:
         self.df_gs = self.df_gs[['MOC', 'Parameter', 'Suffix', 'Logic', 'GSValue', 'InitialValue', 'Permission']]
         self.df_gs.reset_index(inplace=True, drop=True)
         self.r_list, self.process_list = [], []
+        self.mo_moc_map = {}
         self.skip_moc = []
         self.air = 0
         self.run_audit_report()
@@ -87,7 +88,11 @@ class GSAuditBase:
         df_report = df_report.groupby(['Site', 'MO', 'Parameter'], sort=False, as_index=False).head(1)
         df_report['Type'] = self.s_type
         df_report['MOC'] = df_report.MO.str.extract(r'.*,(.*)=[^,=].*').squeeze()
-        df_report['Type'] = self.s_type
+        if hasattr(self, 'mo_moc_map') and self.mo_moc_map:
+            df_report['MOC'] = df_report.apply(
+                lambda r: self.mo_moc_map.get((r['MO'], r['Parameter'])) or r['MOC'],
+                axis=1
+            )
         if self.s_type == 'LTE':
             df_report.loc[(df_report.MOC == 'RATFreqPrio'), 'Type'] = F'{self.s_type}_RATFreqPrio'
         elif self.s_type in ['LTERelation', 'NRRelation']:
@@ -117,6 +122,7 @@ class GSAuditBase:
         return source, target
 
     def r_list_for_gs_para(self, siteid, mo, s_val, row_gs):
+        self.mo_moc_map[(mo, row_gs.Parameter)] = getattr(row_gs, 'MOC', None)
         self.r_list.append([self.air, siteid, mo, row_gs.Parameter, s_val, row_gs.GSValue, row_gs.InitialValue, row_gs.Permission,
                             row_gs.Suffix, self.compare_values(s_val, row_gs.GSValue)])
         self.process_list.append(F'{mo}.{row_gs.Parameter}')

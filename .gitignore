@@ -36,3 +36,7 @@ Thumbs.db
 dist/
 build/
 *.egg-info/
+
+# Data / Excel
+*.xlsx
+*.xls

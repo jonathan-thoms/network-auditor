@@ -75,6 +75,18 @@ class DBUpdateAuditor:
             df['bandwidth'] = df.bandwidth.astype(int)
             for index, row in df.iterrows():
                 o_d = row.to_dict()
+                if o_d.get('layer') in ['MB', 'MB+'] or (o_d.get('band') in [2, 4, 66] and o_d.get('bandwidth') in [5000, 10000, 15000, 20000]):
+                    if o_d.get('bandwidth') in [15000, 20000]:
+                        o_d['layer'] = 'MB+'
+                    elif o_d.get('bandwidth') in [5000, 10000]:
+                        o_d['layer'] = 'MB'
+                if o_d.get('layer') in ['HB', 'HB+'] or (o_d.get('band') == 30 and o_d.get('bandwidth') in [5000, 10000, 15000, 20000]):
+                    if o_d.get('band') == 30:
+                        o_d['layer'] = 'HB+' if o_d.get('bandwidth') in [10000, 15000, 20000] else 'HB'
+                    elif o_d.get('bandwidth') in [15000, 20000]:
+                        o_d['layer'] = 'HB+'
+                    elif o_d.get('bandwidth') in [5000, 10000]:
+                        o_d['layer'] = 'HB'
                 obj, created = LTEBandBWLayer.objects.update_or_create(band=o_d.get("band"), bandwidth=o_d.get("bandwidth"), defaults=o_d)
                 self.custom_log.log.info(F'{table_name}--{created}---{obj}')
             self.custom_log.log.info(F'{table_name} Updated Complete!!!')

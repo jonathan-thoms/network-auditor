@@ -56,7 +56,23 @@ class LTEearfcnBandBWLayer(models.Model):
     @property
     def layer(self):
         ltebandbwlayer = LTEBandBWLayer.objects.filter(band=self.band, bandwidth=self.bandwidth)
-        return ltebandbwlayer[0].layer if ltebandbwlayer.exists() else 'NA'
+        layer = ltebandbwlayer[0].layer if ltebandbwlayer.exists() else 'NA'
+        if layer in ['MB', 'MB+'] or (layer == 'NA' and (self.band in [2, 4, 66] or (self.band == 5 and self.bandwidth > 5000))):
+            if self.bandwidth in [15000, 20000]:
+                return 'MB+'
+            elif self.bandwidth in [5000, 10000]:
+                return 'MB'
+        if layer in ['HB', 'HB+'] or (layer == 'NA' and self.band == 30):
+            if self.band == 30:
+                if self.bandwidth in [10000, 15000, 20000]:
+                    return 'HB+'
+                else:
+                    return 'HB'
+            if self.bandwidth in [15000, 20000]:
+                return 'HB+'
+            elif self.bandwidth in [5000, 10000]:
+                return 'HB'
+        return layer
 
     def __str__(self):
         return F'{self.earfcndl}  {self.band}   {self.bandwidth}  {self.layer}'

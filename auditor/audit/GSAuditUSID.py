@@ -1388,6 +1388,13 @@ class GSAuditUSID:
                 if cell_get('MB') or cell_get('MB+'):
                     if int(cell_get('bw')) == 5000: usid_layer_dict['MB/5'] = True
                     if int(cell_get('bw')) >= 10000: usid_layer_dict['MB/10'] = True
+                    if int(cell_get('bw')) == 15000: usid_layer_dict['MB/15'] = True
+                    if int(cell_get('bw')) >= 20000: usid_layer_dict['MB/20'] = True
+                if cell_get('HB') or cell_get('HB+'):
+                    if int(cell_get('bw')) == 5000: usid_layer_dict['HB/5'] = True
+                    if int(cell_get('bw')) >= 10000: usid_layer_dict['HB/10'] = True
+                    if int(cell_get('bw')) == 15000: usid_layer_dict['HB/15'] = True
+                    if int(cell_get('bw')) >= 20000: usid_layer_dict['HB/20'] = True
                 if cell_get('CellType') == 'NR' and cell_get('SA') and cell_get('NR_MB+_n77G') and cell_get('DoD2'):
                     usid_layer_dict['SA__and__NR_MB+_n77G___and__DoD2'] = True
         self.param_dict['para'].update(usid_layer_dict)
@@ -1620,7 +1627,15 @@ class GSAuditUSID:
             obj, created = LTEearfcnBandBWLayer.objects.update_or_create(earfcndl=earfcndl, defaults=para_dict)
             if dlonly or (str(obj.earfcndl) in self.dlonly): layer = 'DlOnly'
             elif str(obj.earfcndl) in self.earfcndl_lb_850: layer = 'LB'
-            else: layer = obj.layer
+            else:
+                layer = obj.layer
+                if layer in ['MB', 'MB+']:
+                    layer = 'MB+' if bandwidth in [15000, 20000] else 'MB'
+                elif layer in ['HB', 'HB+']:
+                    if band == 30:
+                        layer = 'HB+' if bandwidth in [10000, 15000, 20000] else 'HB'
+                    else:
+                        layer = 'HB+' if bandwidth in [15000, 20000] else 'HB'
             tmp_dict = {
                 F'freq': str(obj.earfcndl),
                 F'band': str(obj.band),
