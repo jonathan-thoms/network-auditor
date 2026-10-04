@@ -380,9 +380,9 @@ class GSAuditUSID:
                 nr_band_update_dict = {'arfcndl': earfcndl, 'bschannelbwdl': bw, 'ssbfrequency': ssbfrequency, 'ssboffset': ssboffset,
                                        'ssbduration': ssbduration, 'ssbperiodicity': ssbperiodicity, 'ssbsubcarrierspacing': ssbsubcarrierspacing}
                 self.check_update_db_nr_band(nr_band_update_dict=nr_band_update_dict)
-                band = self.nr_band.get((earfcndl, bw), {}).get('band')
-                layer = self.nr_band.get((earfcndl, bw), {}).get('layer')
-                ssbfreq = self.nr_band.get((earfcndl, bw), {}).get('ssbfrequency', '0')
+                band = self.nr_band.get((str(earfcndl), str(bw)), {}).get('band')
+                layer = self.nr_band.get((str(earfcndl), str(bw)), {}).get('layer')
+                ssbfreq = self.nr_band.get((str(earfcndl), str(bw)), {}).get('ssbfrequency', '0')
                 ess = not (sector_data.get('essScLocalId', None) in [None, '0'] and sector_data.get('essScPairId', None) in [None, '0'])
                 # Cell level Parameters NR
                 cell_dict[cell] = {
@@ -460,7 +460,7 @@ class GSAuditUSID:
                 # DoD1, DoD2
                 if cell_dict[cell].get(F'NR_MB+_n77G', False):
                     cell_dict[cell] |= {'DoD1': cell.endswith('_2'), 'DoD2': cell.endswith('_3')}
-                cell_dict[cell].update(self.nr_band.get((earfcndl, bw), {}))
+                cell_dict[cell].update(self.nr_band.get((str(earfcndl), str(bw)), {}))
 
             # EUtranCellFDD
             cell_type = 'FDD'
