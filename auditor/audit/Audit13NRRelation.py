@@ -7,11 +7,11 @@ class Audit13NRRelation(GSAuditBase):
             self.nrcellrelation_ref = {'caFreqRelMeasProfileRef', 'intraFreqMCFreqRelProfileRef', 'mcpcPCellNrFreqRelProfileRef',
                                        'mcpcPSCellNrFreqRelProfileRef', 'trStSaNrFreqRelProfileRef', 'ueMCNrFreqRelProfileRef'}
             self.audit_report_for_nrfrequency()
-            self.admin_missing_gs_audit_for_nrfrequency()
+            # self.admin_missing_gs_audit_for_nrfrequency()
             self.gs_audit_for_nrfreqrelation()
-            self.admin_missing_gs_audit_for_nrfreqrelation()
+            # self.admin_missing_gs_audit_for_nrfreqrelation()
             self.audit_report_for_nrcellrelation()
-            self.admin_missing_gs_audit_for_nrcellrelation()
+            # self.admin_missing_gs_audit_for_nrcellrelation()
 
     def audit_report_for_nrfrequency(self):
         df_gs_rel = self.df_gs.copy().loc[(self.df_gs.MOC == 'NRFrequency')]

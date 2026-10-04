@@ -1316,13 +1316,19 @@ class GSAuditUSID:
         # Update LB*, MB*, HB* and layes/bw for Cells
         for site in self.param_dict.get('sites'):
             for cell in self.param_dict.get('sites').get(site).get('cells'):
-                if self.param_dict.get('sites').get(site).get('cells').get(cell).get('CellType', 'NA') not in ['FDD', 'TDD']: continue
+                cell_d = self.param_dict.get('sites').get(site).get('cells').get(cell)
+                if cell_d.get('CellType', 'NA') not in ['FDD', 'TDD']:
+                    if cell_d.get('NR_MB+', False): cell_d['NR_MB'] = True
+                    if cell_d.get('NR_HB+', False): cell_d['NR_HB'] = True
+                    continue
+                if cell_d.get('MB+', False): cell_d['MB'] = True
+                if cell_d.get('HB+', False): cell_d['HB'] = True
                 for param in ['LB', 'MB', 'MB+', 'HB', 'HB+']:
-                    if self.param_dict.get('sites').get(site).get('cells').get(cell).get(param, False):
-                        bw = F'{int(self.param_dict.get("sites").get(site).get("cells").get(cell).get("bw", "0")) // 1000}'
-                        self.param_dict.get('sites').get(site).get('cells').get(cell)[F'{param[0:2]}/{bw}'] = True
+                    if cell_d.get(param, False):
+                        bw = F'{int(cell_d.get("bw", "0")) // 1000}'
+                        cell_d[F'{param[0:2]}/{bw}'] = True
                         if param not in ['LB']:
-                            self.param_dict.get('sites').get(site).get('cells').get(cell)[F'{param[0:2]}*'] = True
+                            cell_d[F'{param[0:2]}*'] = True
         
         # Parameter Update for Site from Cells
         update_site_param_list = ['FWLL', 'WCS_Slim', 'DAS', 'RDS', 'LLA', 'B5', 'B14', 'B17', 'B30', 'B46', 'DlOnly', 'LB', 'MB', 'MB+', 'HB', 'HB+',
@@ -1557,22 +1563,39 @@ class GSAuditUSID:
         self.param_dict['lte_ca_set'] = [F'{_.pcell}--->{_.scell}' for _ in LTECAPair.objects.all()]
         # self.utran_band_dict = {(_.start, _.end): str(_.band) for _ in UMTSBand.objects.all()}
         for earfcn_layer in LTEearfcnBandBWLayer.objects.all():
+            bw_mhz = earfcn_layer.bandwidth // 1000
+            layer = str(earfcn_layer.layer)
             tmp_dict = {
                 F'freq': str(earfcn_layer.earfcndl),
                 F'band': str(earfcn_layer.band),
                 F'bandwidth': str(earfcn_layer.bandwidth),
-                F'layer': str(earfcn_layer.layer),
-                F'b_bw_l': F'B{earfcn_layer.band}-{earfcn_layer.bandwidth}-{earfcn_layer.layer}',
+                F'layer': layer,
+                F'b_bw_l': F'B{earfcn_layer.band}-{earfcn_layer.bandwidth}-{layer}',
                 F'B{earfcn_layer.band}': True,
-                F'{earfcn_layer.bandwidth // 1000}MHz': True,
-                F'{earfcn_layer.layer}': True,
+                F'{bw_mhz}MHz': True,
+                F'B{earfcn_layer.band}/{bw_mhz}MHz': True,
+                F'{layer}': True,
             }
             if str(earfcn_layer.earfcndl) in self.dlonly:
-                del tmp_dict[F'{earfcn_layer.layer}']
+                del tmp_dict[F'{layer}']
+                layer = 'DlOnly'
                 tmp_dict.update({F'DlOnly': True, F'layer': F'DlOnly', F'b_bw_l': F'B{earfcn_layer.band}-{earfcn_layer.bandwidth}-DlOnly'})
             if str(earfcn_layer.earfcndl) in self.earfcndl_lb_850:
-                del tmp_dict[F'{earfcn_layer.layer}']
+                if layer in tmp_dict: del tmp_dict[F'{layer}']
+                layer = 'LB'
                 tmp_dict |= {F'LB': True, F'layer': F'LB', F'b_bw_l': F'B{earfcn_layer.band}-{earfcn_layer.bandwidth}-LB'}
+            if layer in ['MB', 'MB+']:
+                tmp_dict['MB'] = True
+                tmp_dict['MB*'] = True
+                tmp_dict[F'MB/{bw_mhz}'] = True
+            elif layer in ['HB', 'HB+']:
+                tmp_dict['HB'] = True
+                tmp_dict['HB*'] = True
+                tmp_dict[F'HB/{bw_mhz}'] = True
+            elif layer in ['LB']:
+                tmp_dict['LB'] = True
+                tmp_dict['LB*'] = True
+                tmp_dict[F'LB/{bw_mhz}'] = True
             self.earfcn_dict[str(earfcn_layer.earfcndl)] = tmp_dict
     
         for arfcn_item in NRBand.objects.filter(market=self.market):
@@ -1636,6 +1659,7 @@ class GSAuditUSID:
                         layer = 'HB+' if bandwidth in [10000, 15000, 20000] else 'HB'
                     else:
                         layer = 'HB+' if bandwidth in [15000, 20000] else 'HB'
+            bw_mhz = obj.bandwidth // 1000
             tmp_dict = {
                 F'freq': str(obj.earfcndl),
                 F'band': str(obj.band),
@@ -1643,9 +1667,22 @@ class GSAuditUSID:
                 F'layer': F'{layer}',
                 F'b_bw_l': F'B{obj.band}-{obj.bandwidth}-{layer}',
                 F'B{obj.band}': True,
-                F'{obj.bandwidth // 1000}MHz': True,
+                F'{bw_mhz}MHz': True,
+                F'B{obj.band}/{bw_mhz}MHz': True,
                 F'{layer}': True,
             }
+            if layer in ['MB', 'MB+']:
+                tmp_dict['MB'] = True
+                tmp_dict['MB*'] = True
+                tmp_dict[F'MB/{bw_mhz}'] = True
+            elif layer in ['HB', 'HB+']:
+                tmp_dict['HB'] = True
+                tmp_dict['HB*'] = True
+                tmp_dict[F'HB/{bw_mhz}'] = True
+            elif layer in ['LB']:
+                tmp_dict['LB'] = True
+                tmp_dict['LB*'] = True
+                tmp_dict[F'LB/{bw_mhz}'] = True
             self.earfcn_dict[str(obj.earfcndl)] = tmp_dict
     
     """

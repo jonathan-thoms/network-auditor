@@ -9,17 +9,17 @@ class Audit03LTERelation(GSAuditBase):
         if len([_ for _ in self.usid.sites if len(self.usid.sites.get(_).enb) > 0]) > 0:
             self.gs_audit_for_lte_eutranfrequency()
             self.gs_audit_for_eutranfreqrelation()
-            self.admin_missing_gs_audit_for_same_type_dataframes_relation(
-                self.usid.df_lte_rel.loc[self.usid.df_lte_rel.flag | self.usid.df_lte_rel.cr_flag], 'EUtranFreqRelation')
+            # self.admin_missing_gs_audit_for_same_type_dataframes_relation(
+            #     self.usid.df_lte_rel.loc[self.usid.df_lte_rel.flag | self.usid.df_lte_rel.cr_flag], 'EUtranFreqRelation')
             self.gs_audit_for_eutrancellrelation()
-            self.admin_missing_gs_audit_for_same_type_dataframes_relation(
-                self.usid.df_lte_crel.loc[self.usid.df_lte_crel.flag | self.usid.df_lte_crel.cr_flag], 'EUtranCellRelation')
+            # self.admin_missing_gs_audit_for_same_type_dataframes_relation(
+            #     self.usid.df_lte_crel.loc[self.usid.df_lte_crel.flag | self.usid.df_lte_crel.cr_flag], 'EUtranCellRelation')
             # Special Method to Audit EUtranCellRelation.isHoAllowedBr for Non_Co_Site_Cell_Relations to false --- No Logic/hard Codded
             self.gs_audit_for_eutrancellrelation_ishoallowedbr()
 
             self.gs_audit_for_gutransyncsignalfrequency()
             self.gs_audit_for_gutranfreqrelation()
-            self.admin_missing_gs_audit_for_same_type_dataframes_relation(self.usid.df_lte_nr_rel, 'GUtranFreqRelation')
+            # self.admin_missing_gs_audit_for_same_type_dataframes_relation(self.usid.df_lte_nr_rel, 'GUtranFreqRelation')
             # self.gs_audit_for_utranfreqrelation()
             # self.admin_missing_gs_audit_for_same_type_dataframes_relation(
             #     self.usid.df_lte_umts_rel.loc[self.usid.df_lte_umts_rel.flag], 'UtranFreqRelation')
