@@ -40,7 +40,9 @@ class GSAuditLogic:
         elif mo_level == 'cell' and cell is not None:
             ret_bool = self.op_dict.get('sites').get(site).get('cells').get(cell, {}).get(item, self.bool_dict.get(item, False))
         elif mo_level in ['earfcn', 'uarfcn', 'ssbfreq']:
-            ret_bool = self.op_dict.get(mo_level).get(cell).get(item, self.bool_dict.get(item, False))
+            mo_dict = self.op_dict.get(mo_level, {})
+            freq_dict = mo_dict.get(cell) or mo_dict.get(str(cell)) or (mo_dict.get(int(cell)) if str(cell).isdigit() else {}) or {}
+            ret_bool = freq_dict.get(item, self.bool_dict.get(item, False))
         else:
             if cell is not None:
                 ret_bool = self.op_dict.get('sites').get(site).get('cells').get(cell, {}).get(item, self.bool_dict.get(item, False))
@@ -64,6 +66,10 @@ class GSAuditLogic:
         # print(F'expression:"{expression}" -- cell:{cell} -- site:{site} -- mo_level:{mo_level}')
         if pd.isnull(expression) or expression.strip() == '': return True
         expression = expression.strip()
+        expression = expression.replace('non_ (', 'non_(')
+        expression = expression.replace('AIR6419', 'AIR_6419').replace('AIR6449', 'AIR_6449').replace('AIR6472', 'AIR_6472')
+        expression = expression.replace('non_(AIR_6419 and AIR_6449 and AIR_6472)', '(non_AIR_6419 and non_AIR_6449 and non_AIR_6472)')
+        expression = expression.replace('non_(AIR_6419 or AIR_6449 or AIR_6472)', '(non_AIR_6419 and non_AIR_6449 and non_AIR_6472)')
         expression = expression.replace('(<10 or >12_n77_Cells)', 'non_10_to_12_n77_Cells')
         expression = expression.replace('(>=10 and <=12_n77_Cells)', '10_to_12_n77_Cells')
         operator = []

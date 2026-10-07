@@ -121,7 +121,7 @@ class GSAuditUSID:
         self.get_lte_nr_relations_data()
 
         self.update_lte_carrier_agg()
-        self.update_lte_catm_cells()
+        # self.update_lte_catm_cells()
         self.update_lte_cellsleep_mimosleep()
         self.update_lte_anchor_flag()
         
@@ -326,14 +326,20 @@ class GSAuditUSID:
                 cellid = data.get('cellLocalId')
                 cell = nr_cell_mo.split('=')[-1]
                 sa_flag = False
-                if self.param_dict['sites'][site.siteid]['para']['AMF']:
-                    for nr_cell_cu_mo in site.get_mos_with_parent_moc(parent=site.gnb_cucp, moc='NRCellCU'):
-                        if cellid == site.get_mo_data(nr_cell_cu_mo).get('cellLocalId'):
-                            sa_flag = 1052688 <= int(data.get('nRTAC')) <= 3167231
-                            break
-                        # if data.get('secondaryCellOnly') == 'false' and cellid == site.get_mo_data(nr_cell_cu_mo).get('cellLocalId'):
-                            # sa_flag = (len(site.get_mos_with_parent_moc(parent=nr_cell_cu_mo, moc='EUtranFreqRelation')) > 0)
-                            # break
+                cu_data = {}
+                for nr_cell_cu_mo in site.get_mos_with_moc(moc='NRCellCU'):
+                    c_data = site.get_mo_data(nr_cell_cu_mo)
+                    if str(cellid) == str(c_data.get('cellLocalId')):
+                        cu_data = c_data
+                        break
+                tac = cu_data.get('nRTAC') or data.get('nRTAC')
+                if tac not in [None, '', 'N/F']:
+                    try:
+                        sa_flag = 1052688 <= int(tac) <= 3167231
+                    except (ValueError, TypeError):
+                        sa_flag = False
+                elif self.param_dict['sites'][site.siteid]['para'].get('AMF', False):
+                    sa_flag = True
                 vonr_flag = self.get_feature_status_of_site(site_dict=site, feature_name='CXC4012592')
                 if vonr_flag:
                     vonr_flag = False
@@ -392,12 +398,13 @@ class GSAuditUSID:
                     F'nodeid': site.gnodeb_id,
                     F'nodeid_len': site.gnodeb_length,
                     F'cellid': cellid,
-                    F'tac': data.get('nRTAC'),
+                    F'tac': tac,
                     F'pci': data.get('nRPCI'),
                     F'sec_mo': sec_mo,
                     F'sef_mo': sef_mo,
                     F'FRU_Type': all_frus,
-                    F'ssbfreq': ssbfreq,
+                    F'ssbfreq': str(ssbfreq if ssbfreq != '0' else (ssbfrequency or '0')),
+                    F'ssbfrequency': str(ssbfreq if ssbfreq != '0' else (ssbfrequency or '0')),
                     F'layer': layer,
                     F'band': band,
                     F'earfcndl': earfcndl,
@@ -1155,6 +1162,7 @@ class GSAuditUSID:
                 'ssbsubcarrierspacing': ssb.get('ssbsubcarrierspacing', ssb.get('scc', 'NA')),
                 'layer': layer,
                 'band': band,
+                'NR_FDD': band in ['5', '12', '14', '29', '2', '66', '30'],
                 'N5_REL': False,
                 'USID_FREQ': len(self.df_nr_cells.loc[self.df_nr_cells.ssbfreq.astype(str) == str(ssbfreq)].index) > 0,
                 'E///_FREQ': int(ssb.get('ssbsubcarrierspacing', ssb.get('scc', '0'))) <= 120,
@@ -1177,14 +1185,60 @@ class GSAuditUSID:
             for cell in self.param_dict['sites'][site]['cells']:
                 cell_dict_get = self.param_dict['sites'][site]['cells'].get(cell).get
                 if cell_dict_get('CellType') == 'NR':
-                    ssbfreq = cell_dict_get('ssbfrequency')
-                    if ssbfreq in temp_dict.keys():
-                        for para in ['SA', 'DoD1', 'DoD2']:
-                            if cell_dict_get(para, False): temp_dict[ssbfreq][para] = True
+                    c_ssbfreq = str(cell_dict_get('ssbfrequency') or cell_dict_get('ssbfreq') or '')
+                    for target_key in [c_ssbfreq, int(c_ssbfreq) if c_ssbfreq.isdigit() else None]:
+                        if target_key is not None and target_key in temp_dict:
+                            for para in ['SA', 'DoD1', 'DoD2']:
+                                if cell_dict_get(para, False):
+                                    temp_dict[target_key][para] = True
+
+        # Check ExternalGUtranCell for SA TAC
+        for site_key in self.sites:
+            site = self.sites.get(site_key)
+            for ext_cell_mo in site.get_mos_with_moc(moc='ExternalGUtranCell'):
+                ext_data = site.get_mo_data(ext_cell_mo)
+                ext_tac = ext_data.get('nRTAC')
+                is_ext_sa = False
+                if ext_tac not in [None, '', 'N/F']:
+                    try:
+                        is_ext_sa = 1052688 <= int(ext_tac) <= 3167231
+                    except (ValueError, TypeError):
+                        pass
+                if is_ext_sa:
+                    freq_ref = ext_data.get('gUtranSyncSignalFrequencyRef', '')
+                    if freq_ref:
+                        ext_arfcn = str(site.get_mo_data(freq_ref).get('arfcn', ''))
+                        if ext_arfcn:
+                            for k in [ext_arfcn, int(ext_arfcn) if ext_arfcn.isdigit() else None]:
+                                if k is not None and k in temp_dict:
+                                    temp_dict[k]['SA'] = True
+
+        # If site or USID has SA capability, any Band 5 / NR_FDD carrier is SA
+        site_has_sa = (
+            self.param_dict.get('para', {}).get('SA', False) or
+            any(self.param_dict['sites'][s]['para'].get('AMF', False) or self.param_dict['sites'][s]['para'].get('SA', False)
+                for s in self.param_dict.get('sites', {}))
+        )
+        if site_has_sa:
+            for k in list(temp_dict.keys()):
+                if temp_dict[k].get('band') == '5' or temp_dict[k].get('NR_FDD'):
+                    temp_dict[k]['SA'] = True
+
         # N5_REL
         if len([_ for _ in temp_dict if temp_dict[_]['band'] == '5']) > 0:
             for ssbfreq in temp_dict:
                 temp_dict[ssbfreq]['N5_REL'] = True
+
+        # Duplicate keys so both str(ssbfreq) and int(ssbfreq) work
+        for k in list(temp_dict.keys()):
+            s_k = str(k)
+            if s_k not in temp_dict:
+                temp_dict[s_k] = copy.deepcopy(temp_dict[k])
+            if s_k.isdigit():
+                i_k = int(s_k)
+                if i_k not in temp_dict:
+                    temp_dict[i_k] = copy.deepcopy(temp_dict[k])
+
         self.param_dict['ssbfreq'] = copy.deepcopy(temp_dict)
 
         # Update EUtranFrequency earfcn_dict with missing band, BW data in DB
@@ -1293,21 +1347,8 @@ class GSAuditUSID:
         #     self.param_dict.get('sites').get(row.site).get('cells').get(row.cell).update(sleep_cell_dict)
 
     def update_lte_catm_cells(self):
-        df_tmp_fdd_cells = self.df_lte_cells.copy()[['site', 'cell_type', 'cell', 'earfcn', 'bw', 'band']]
-        df_tmp_fdd_cells = df_tmp_fdd_cells.loc[(df_tmp_fdd_cells.cell_type == 'FDD') & df_tmp_fdd_cells.band.isin(['17', '2', '4'])]
-        if len(df_tmp_fdd_cells.loc[(df_tmp_fdd_cells.band == '17') & (df_tmp_fdd_cells.bw == '10000')].index) > 0:
-            df_tmp_fdd_cells = df_tmp_fdd_cells.loc[(df_tmp_fdd_cells.band == '17') & (df_tmp_fdd_cells.bw == '10000')]
-        elif len(df_tmp_fdd_cells.loc[df_tmp_fdd_cells.band.isin(['2', '4'])].index) > 0:
-            df_tmp_fdd_cells = df_tmp_fdd_cells.loc[df_tmp_fdd_cells.band.isin(['2', '4'])]
-            df_tmp_fdd_cells = df_tmp_fdd_cells.loc[df_tmp_fdd_cells.bw == df_tmp_fdd_cells['bw'].max()]
-            df_tmp_fdd_cells = df_tmp_fdd_cells.loc[df_tmp_fdd_cells.earfcn == df_tmp_fdd_cells['earfcn'].min()]
-        elif len(df_tmp_fdd_cells.loc[(df_tmp_fdd_cells.band == '17') & (df_tmp_fdd_cells.bw == '5000')].index) > 0:
-            df_tmp_fdd_cells = df_tmp_fdd_cells.loc[(df_tmp_fdd_cells.band == '17') & (df_tmp_fdd_cells.bw == '5000')]
-        for row in df_tmp_fdd_cells.itertuples():
-            self.param_dict.get('sites').get(row.site).get('cells').get(row.cell).update({'Catm1': True})
-        # for row in df_tmp_fdd_cells.itertuples():
-        #     if not self.param_dict.get('sites').get(row.site).get('cells').get(row.cell).get('OnAir'):
-        #         self.param_dict.get('sites').get(row.site).get('cells').get(row.cell).update({'Catm1': True})
+        # Bypassed: CatM1 is determined strictly from DCGK input (catm1SupportEnabled)
+        pass
         
     def update_site_usid_params_from_site_cell(self):
         # Update multiCarrier for LTE USID
@@ -1318,8 +1359,6 @@ class GSAuditUSID:
             for cell in self.param_dict.get('sites').get(site).get('cells'):
                 cell_d = self.param_dict.get('sites').get(site).get('cells').get(cell)
                 if cell_d.get('CellType', 'NA') not in ['FDD', 'TDD']:
-                    if cell_d.get('NR_MB+', False): cell_d['NR_MB'] = True
-                    if cell_d.get('NR_HB+', False): cell_d['NR_HB'] = True
                     continue
                 if cell_d.get('MB+', False): cell_d['MB'] = True
                 if cell_d.get('HB+', False): cell_d['HB'] = True

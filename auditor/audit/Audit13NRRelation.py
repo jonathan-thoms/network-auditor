@@ -90,18 +90,23 @@ class Audit13NRRelation(GSAuditBase):
                 if not logic_flag:
                     suffix_mapped = [_.strip() for _ in row_gs.Logic.split('|')]
                     for cond in suffix_mapped:
-                        if cond in ('COSECTOR', 'SAME_SEF', 'INTRA_USID'): continue
+                        if cond in ('COSECTOR', 'SAME_SEF', 'INTRA_USID', 'OWNFREQ', 'INTERFREQ'): continue
                         source_cond, target_cond = self.split_source_target(cond)
                         logic_flag = logic_flag or (self.logic.evaluate(source_cond, cell=r.cell, site=r.site, mo_level='cell') and
                                                     self.logic.evaluate(target_cond, cell=r.t_cell, site=r.t_site, mo_level='cell'))
                         if logic_flag: break
-                    if len([_ for _ in suffix_mapped if _ in ('COSECTOR', 'SAME_SEF', 'INTRA_USID')]) > 0:
+                    if len([_ for _ in suffix_mapped if _ in ('COSECTOR', 'SAME_SEF', 'INTRA_USID', 'OWNFREQ', 'INTERFREQ')]) > 0:
                         if len(suffix_mapped) == 1: logic_flag = True
                         if 'COSECTOR' in suffix_mapped: logic_flag = logic_flag and self.usid.get_co_sector_for_nr_cell(r.cell, r.t_cell)
                         if 'SAME_SEF' in suffix_mapped:
                             logic_flag = logic_flag and self.usid.get_same_sef_for_nr_cell(r.site, r.cell, r.t_site, r.t_cell)
                         if 'INTRA_USID' in suffix_mapped:
                             logic_flag = logic_flag and (r.site == r.t_site)
+                        if 'OWNFREQ' in suffix_mapped or 'INTERFREQ' in suffix_mapped:
+                            cell_ssbfreq = str(self.usid.param_dict.get('sites', {}).get(r.site, {}).get('cells', {}).get(r.cell, {}).get('ssbfreq', ''))
+                            r_ssbfreq = str(getattr(r, 'ssbfreq', ''))
+                            if 'OWNFREQ' in suffix_mapped: logic_flag = logic_flag and (cell_ssbfreq != '' and cell_ssbfreq == r_ssbfreq)
+                            if 'INTERFREQ' in suffix_mapped: logic_flag = logic_flag and (cell_ssbfreq != '' and cell_ssbfreq != r_ssbfreq)
                 if logic_flag:
                     self.r_list_for_gs_para(r.site, r.fdn, self.usid.sites[F'site_{r.site}'].dcg.get(r.fdn, {}).get(row_gs.Parameter, 'N/F'), row_gs)
 
